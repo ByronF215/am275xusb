@@ -1,27 +1,25 @@
-# AM275x USB Device
+# AM275x USB
 
-This workspace contains a CCS project for AM275x USB device development on the AM275x EVM R5F core.  The current firmware exposes the board eMMC as a USB Mass Storage Class device and initializes the media with a full-disk FAT32 layout when needed.
+This repository keeps `main` as a branch index only.  Firmware source code is maintained on feature branches.
 
-## Project
+## Branches
 
-- CCS project: `am275xusb`
-- Target: AM275x EVM, `MAIN_Cortex_R5_0_0`
-- SDK tested with: `FreeRTOS SDK for AM275x 12.0.0.22`
-- SysConfig tested with: `1.27.1`
+- `usb-device` - common AM275x USB device controller and class-driver framework.
+- `usb-msc` - USB Mass Storage device firmware for exposing eMMC to the host.
+- `uac` - UAC2 device firmware branch.
 
-## Source Layout
+## Usage
 
-- `am275xusb/main.c` - FreeRTOS task entry and driver open/close sequence.
-- `am275xusb/am275xusb.c` - USB bring-up, eMMC FAT32 check, and format flow.
-- `am275xusb/example.syscfg` - TI driver configuration.
-- `am275xusb/third_party/am275x_uac2/` - Local USB device stack sources.  Some legacy names still reference UAC2 because the stack originally started as UAC work; the project now targets generic USB device features.
+Check out the branch that matches the USB device function you want to work on:
 
-## Notes
+```bash
+git checkout usb-msc
+```
 
-- The firmware uses eMMC as a block device for USB MSC.  It intentionally avoids mounting FreeRTOS+FAT during normal USB operation so the host owns the filesystem.
-- On first boot, if the eMMC does not contain the expected full-disk FAT32 layout, the firmware writes a quick FAT32 layout and erases the existing partition table/filesystem metadata.
-- Large local reference files, packet captures, serial logs, and CCS build outputs are ignored by git.
+or:
 
-## Build
+```bash
+git checkout uac
+```
 
-Import or open the CCS project directory and build the `Debug` configuration.  SysConfig-generated files and CCS build outputs are regenerated under the ignored build output directory.
+The CCS project is available on the feature branches, not on `main`.
