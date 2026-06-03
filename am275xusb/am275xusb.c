@@ -44,16 +44,16 @@
 #include "am275x_usb_ep0.h"
 #include "am275x_usb_hw.h"
 
-#ifndef AM275X_UAC2_ENABLE_USB0_HW_INIT
-#define AM275X_UAC2_ENABLE_USB0_HW_INIT (1)
+#ifndef AM275X_USB_ENABLE_USB0_HW_INIT
+#define AM275X_USB_ENABLE_USB0_HW_INIT (1)
 #endif
 
-#ifndef AM275X_UAC2_ENABLE_USB0_CONNECT
-#define AM275X_UAC2_ENABLE_USB0_CONNECT (1)
+#ifndef AM275X_USB_ENABLE_USB0_CONNECT
+#define AM275X_USB_ENABLE_USB0_CONNECT (1)
 #endif
 
-#ifndef AM275X_UAC2_USB0_POLL_FOREVER
-#define AM275X_UAC2_USB0_POLL_FOREVER (1)
+#ifndef AM275X_USB_USB0_POLL_FOREVER
+#define AM275X_USB_USB0_POLL_FOREVER (1)
 #endif
 
 #define USB0_EVENT_BUFFER_SIZE (256U)
@@ -410,7 +410,7 @@ static int32_t emmc_ensure_full_disk_fat(void)
     return SystemP_SUCCESS;
 }
 
-#if (AM275X_UAC2_ENABLE_USB0_HW_INIT != 0)
+#if (AM275X_USB_ENABLE_USB0_HW_INIT != 0)
 static void usb0_poll_once(void)
 {
     Am275xUsbDcdEvent event;
@@ -460,7 +460,7 @@ static void usb0_poll_once(void)
 void am275xusb_main(void *args)
 {
     Am275xUsbEp0Response ep0Response;
-    Am275xUac2SetupPacket setup;
+    Am275xUsbSetupPacket setup;
     Am275xUsbHwInfo usbHwInfo;
     const uint8_t *cfgDesc;
     uint16_t cfgDescLen;
@@ -481,17 +481,17 @@ void am275xusb_main(void *args)
     status = Am275xUsbDevice_init(&gUsbDevice, &gUsbMsc);
     DebugP_assert(status == 0);
 
-    status = Am275xUsbMsc_getDescriptor(AM275X_UAC2_DESC_CONFIGURATION,
+    status = Am275xUsbMsc_getDescriptor(AM275X_USB_DESC_CONFIGURATION,
                                         0,
                                         &cfgDesc,
                                         &cfgDescLen);
     DebugP_assert(status == 0);
     (void)cfgDesc;
 
-    setup = (Am275xUac2SetupPacket) {
+    setup = (Am275xUsbSetupPacket) {
         .bmRequestType = 0x80U,
         .bRequest = AM275X_USB_REQ_GET_DESCRIPTOR,
-        .wValue = ((uint16_t)AM275X_UAC2_DESC_DEVICE << 8U),
+        .wValue = ((uint16_t)AM275X_USB_DESC_DEVICE << 8U),
         .wIndex = 0U,
         .wLength = 18U,
     };
@@ -500,7 +500,7 @@ void am275xusb_main(void *args)
     DebugP_assert(ep0Response.txLength == 18U);
 
     Am275xUsbHw_getUsb0Info(&usbHwInfo);
-#if (AM275X_UAC2_ENABLE_USB0_HW_INIT != 0)
+#if (AM275X_USB_ENABLE_USB0_HW_INIT != 0)
     {
         Am275xUsbDcdConfig dcdConfig;
 
@@ -545,7 +545,7 @@ void am275xusb_main(void *args)
             DebugP_log("USB0 EP0 init failed, status %d\r\n", status);
             return;
         }
-#if (AM275X_UAC2_ENABLE_USB0_CONNECT != 0)
+#if (AM275X_USB_ENABLE_USB0_CONNECT != 0)
         gUsbBringupStep = 14U;
         status = Am275xUsbDcd_connect(&gUsbDcd);
         gUsbBringupStatus = status;
@@ -565,7 +565,7 @@ void am275xusb_main(void *args)
         DebugP_log("USB0 DCD and EP0 primed, DSTS 0x%08x\r\n", gUsbLastDsts);
         gUsbBringupStep = 16U;
 #else
-        DebugP_log("USB0 connect disabled by AM275X_UAC2_ENABLE_USB0_CONNECT\r\n");
+        DebugP_log("USB0 connect disabled by AM275X_USB_ENABLE_USB0_CONNECT\r\n");
 #endif
     }
 #else
@@ -579,11 +579,11 @@ void am275xusb_main(void *args)
     DebugP_log("USB0 core cap base 0x%08x, device base 0x%08x\r\n",
                (uint32_t)usbHwInfo.coreCapBase,
                (uint32_t)usbHwInfo.coreDeviceBase);
-#if (AM275X_UAC2_ENABLE_USB0_HW_INIT == 0)
-    DebugP_log("USB0 DCD compiled; hardware init disabled by AM275X_UAC2_ENABLE_USB0_HW_INIT\r\n");
+#if (AM275X_USB_ENABLE_USB0_HW_INIT == 0)
+    DebugP_log("USB0 DCD compiled; hardware init disabled by AM275X_USB_ENABLE_USB0_HW_INIT\r\n");
 #endif
 
-#if ((AM275X_UAC2_ENABLE_USB0_HW_INIT != 0) && (AM275X_UAC2_USB0_POLL_FOREVER != 0))
+#if ((AM275X_USB_ENABLE_USB0_HW_INIT != 0) && (AM275X_USB_USB0_POLL_FOREVER != 0))
     while (1) {
         volatile uint32_t delay;
 

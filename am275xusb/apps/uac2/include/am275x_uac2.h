@@ -5,6 +5,8 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "am275x_usb_types.h"
+
 #ifdef __cplusplus
 extern "C" {
 #endif
@@ -26,11 +28,11 @@ typedef enum Am275xUac2Format_e {
     AM275X_UAC2_FORMAT_PCM_S16 = 0,
 } Am275xUac2Format;
 
-typedef enum Am275xUac2DescriptorType_e {
-    AM275X_UAC2_DESC_DEVICE = 1,
-    AM275X_UAC2_DESC_CONFIGURATION = 2,
-    AM275X_UAC2_DESC_STRING = 3,
-} Am275xUac2DescriptorType;
+#define AM275X_UAC2_DESC_DEVICE        AM275X_USB_DESC_DEVICE
+#define AM275X_UAC2_DESC_CONFIGURATION AM275X_USB_DESC_CONFIGURATION
+#define AM275X_UAC2_DESC_STRING        AM275X_USB_DESC_STRING
+
+typedef Am275xUsbDescriptorType Am275xUac2DescriptorType;
 
 typedef enum Am275xUac2StreamDir_e {
     AM275X_UAC2_STREAM_CAPTURE = 0,
@@ -46,20 +48,8 @@ typedef struct Am275xUac2Config_s {
     uint16_t deviceBcd;
 } Am275xUac2Config;
 
-typedef struct Am275xUac2SetupPacket_s {
-    uint8_t bmRequestType;
-    uint8_t bRequest;
-    uint16_t wValue;
-    uint16_t wIndex;
-    uint16_t wLength;
-} Am275xUac2SetupPacket;
-
-typedef struct Am275xUac2ControlTransfer_s {
-    const uint8_t *txData;
-    uint16_t txLength;
-    uint8_t *rxData;
-    uint16_t rxLength;
-} Am275xUac2ControlTransfer;
+typedef Am275xUsbSetupPacket Am275xUac2SetupPacket;
+typedef Am275xUsbControlTransfer Am275xUac2ControlTransfer;
 
 typedef struct Am275xUac2Stats_s {
     uint32_t usbResetCount;

@@ -14,7 +14,10 @@ This workspace contains a CCS project for AM275x USB device development on the A
 - `am275xusb/main.c` - FreeRTOS task entry and driver open/close sequence.
 - `am275xusb/am275xusb.c` - USB bring-up, eMMC FAT32 check, and format flow.
 - `am275xusb/example.syscfg` - TI driver configuration.
-- `am275xusb/third_party/am275x_uac2/` - Local USB device stack sources.  Some legacy names still reference UAC2 because the stack originally started as UAC work; the project now targets generic USB device features.
+- `am275xusb/components/usb_device/` - Common USB device, EP0, and AM275x DWC3 hardware code.
+- `am275xusb/apps/usb_msc/` - USB Mass Storage Class implementation for exposing eMMC.
+- `am275xusb/apps/uac2/` - UAC2 code carried forward for the future audio-device branch.
+- `am275xusb/docs/` - Local implementation notes for the AM275x USB controller.
 
 ## Notes
 

@@ -73,12 +73,12 @@ void Am275xUsbDevice_attachDcd(Am275xUsbDevice *dev, struct Am275xUsbDcd_s *dcd)
 }
 
 static int32_t handle_get_descriptor(Am275xUsbDevice *dev,
-                                     const Am275xUac2SetupPacket *setup,
+                                     const Am275xUsbSetupPacket *setup,
                                      Am275xUsbEp0Response *response)
 {
     const uint8_t *desc = NULL;
     uint16_t descLen = 0;
-    Am275xUac2DescriptorType descType = (Am275xUac2DescriptorType)((setup->wValue >> 8U) & 0xFFU);
+    Am275xUsbDescriptorType descType = (Am275xUsbDescriptorType)((setup->wValue >> 8U) & 0xFFU);
     uint8_t descIndex = (uint8_t)(setup->wValue & 0xFFU);
 
     if (Am275xUsbMsc_getDescriptor(descType, descIndex, &desc, &descLen) != 0) {
@@ -89,7 +89,7 @@ static int32_t handle_get_descriptor(Am275xUsbDevice *dev,
 }
 
 static int32_t handle_get_status(Am275xUsbDevice *dev,
-                                 const Am275xUac2SetupPacket *setup,
+                                 const Am275xUsbSetupPacket *setup,
                                  Am275xUsbEp0Response *response)
 {
     uint8_t recipient = setup->bmRequestType & AM275X_USB_RECIPIENT_MASK;
@@ -105,7 +105,7 @@ static int32_t handle_get_status(Am275xUsbDevice *dev,
 }
 
 static int32_t handle_get_configuration(Am275xUsbDevice *dev,
-                                        const Am275xUac2SetupPacket *setup,
+                                        const Am275xUsbSetupPacket *setup,
                                         Am275xUsbEp0Response *response)
 {
     (void)setup;
@@ -115,7 +115,7 @@ static int32_t handle_get_configuration(Am275xUsbDevice *dev,
 }
 
 static int32_t handle_set_configuration(Am275xUsbDevice *dev,
-                                        const Am275xUac2SetupPacket *setup,
+                                        const Am275xUsbSetupPacket *setup,
                                         Am275xUsbEp0Response *response)
 {
     uint8_t configuration = (uint8_t)(setup->wValue & 0xFFU);
@@ -133,7 +133,7 @@ static int32_t handle_set_configuration(Am275xUsbDevice *dev,
 }
 
 static int32_t handle_get_interface(Am275xUsbDevice *dev,
-                                    const Am275xUac2SetupPacket *setup,
+                                    const Am275xUsbSetupPacket *setup,
                                     Am275xUsbEp0Response *response)
 {
     uint8_t interfaceNumber = (uint8_t)(setup->wIndex & 0xFFU);
@@ -147,7 +147,7 @@ static int32_t handle_get_interface(Am275xUsbDevice *dev,
 }
 
 static int32_t handle_set_interface(Am275xUsbDevice *dev,
-                                    const Am275xUac2SetupPacket *setup,
+                                    const Am275xUsbSetupPacket *setup,
                                     Am275xUsbEp0Response *response)
 {
     uint8_t alternateSetting = (uint8_t)(setup->wValue & 0xFFU);
@@ -161,7 +161,7 @@ static int32_t handle_set_interface(Am275xUsbDevice *dev,
 }
 
 static int32_t handle_standard_request(Am275xUsbDevice *dev,
-                                       const Am275xUac2SetupPacket *setup,
+                                       const Am275xUsbSetupPacket *setup,
                                        Am275xUsbEp0Response *response)
 {
     switch (setup->bRequest) {
@@ -205,7 +205,7 @@ static int32_t handle_standard_request(Am275xUsbDevice *dev,
 }
 
 static int32_t handle_class_request(Am275xUsbDevice *dev,
-                                    const Am275xUac2SetupPacket *setup,
+                                    const Am275xUsbSetupPacket *setup,
                                     const uint8_t *outData,
                                     uint16_t outLength,
                                     Am275xUsbEp0Response *response)
@@ -231,7 +231,7 @@ static int32_t handle_class_request(Am275xUsbDevice *dev,
 }
 
 int32_t Am275xUsbDevice_handleSetup(Am275xUsbDevice *dev,
-                                    const Am275xUac2SetupPacket *setup,
+                                    const Am275xUsbSetupPacket *setup,
                                     const uint8_t *outData,
                                     uint16_t outLength,
                                     Am275xUsbEp0Response *response)

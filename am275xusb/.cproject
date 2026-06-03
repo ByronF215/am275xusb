@@ -46,7 +46,9 @@
                                     <listOptionValue value="${MCU_PLUS_SDK_PATH}/source/kernel/freertos/config/am275x/r5f"/>
                                     <listOptionValue value="${MCU_PLUS_SDK_PATH}/source/fs/freertos_fat/config"/>
                                     <listOptionValue value="${MCU_PLUS_SDK_PATH}/source/fs/freertos_fat/FreeRTOS-FAT/include"/>
-                                    <listOptionValue value="${PROJECT_ROOT}/third_party/am275x_uac2/include"/>
+                                    <listOptionValue value="${PROJECT_ROOT}/components/usb_device/include"/>
+                                    <listOptionValue value="${PROJECT_ROOT}/apps/usb_msc/include"/>
+                                    <listOptionValue value="${PROJECT_ROOT}/apps/uac2/include"/>
                                 </option>
                                 <option id="com.ti.ccstudio.buildDefinitions.TMS470_TICLANG_4.0.compilerID.DEFINE.89920777" superClass="com.ti.ccstudio.buildDefinitions.TMS470_TICLANG_4.0.compilerID.DEFINE" valueType="definedSymbols">
                                     <listOptionValue value="${SYSCONFIG_TOOL_SYMBOLS}"/>
@@ -162,7 +164,9 @@
                                     <listOptionValue value="${MCU_PLUS_SDK_PATH}/source/kernel/freertos/config/am275x/r5f"/>
                                     <listOptionValue value="${MCU_PLUS_SDK_PATH}/source/fs/freertos_fat/config"/>
                                     <listOptionValue value="${MCU_PLUS_SDK_PATH}/source/fs/freertos_fat/FreeRTOS-FAT/include"/>
-                                    <listOptionValue value="${PROJECT_ROOT}/third_party/am275x_uac2/include"/>
+                                    <listOptionValue value="${PROJECT_ROOT}/components/usb_device/include"/>
+                                    <listOptionValue value="${PROJECT_ROOT}/apps/usb_msc/include"/>
+                                    <listOptionValue value="${PROJECT_ROOT}/apps/uac2/include"/>
                                 </option>
                                 <option id="com.ti.ccstudio.buildDefinitions.TMS470_TICLANG_4.0.compilerID.DEFINE.286034923" superClass="com.ti.ccstudio.buildDefinitions.TMS470_TICLANG_4.0.compilerID.DEFINE" valueType="definedSymbols">
                                     <listOptionValue value="${SYSCONFIG_TOOL_SYMBOLS}"/>

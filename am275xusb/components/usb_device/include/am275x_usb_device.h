@@ -4,7 +4,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "am275x_uac2.h"
+#include "am275x_usb_types.h"
 #include "am275x_usb_hw.h"
 #include "am275x_usb_msc.h"
 
@@ -63,7 +63,7 @@ typedef struct Am275xUsbDevice_s {
 int32_t Am275xUsbDevice_init(Am275xUsbDevice *dev, Am275xUsbMsc *msc);
 void Am275xUsbDevice_attachDcd(Am275xUsbDevice *dev, struct Am275xUsbDcd_s *dcd);
 int32_t Am275xUsbDevice_handleSetup(Am275xUsbDevice *dev,
-                                    const Am275xUac2SetupPacket *setup,
+                                    const Am275xUsbSetupPacket *setup,
                                     const uint8_t *outData,
                                     uint16_t outLength,
                                     Am275xUsbEp0Response *response);

@@ -896,7 +896,7 @@ void Am275xUsbMsc_processEvent(Am275xUsbMsc *msc, const Am275xUsbDcdEvent *event
     }
 }
 
-int32_t Am275xUsbMsc_getDescriptor(Am275xUac2DescriptorType type,
+int32_t Am275xUsbMsc_getDescriptor(Am275xUsbDescriptorType type,
                                    uint8_t index,
                                    const uint8_t **data,
                                    uint16_t *length)
@@ -908,13 +908,13 @@ int32_t Am275xUsbMsc_getDescriptor(Am275xUac2DescriptorType type,
     *data = NULL;
     *length = 0U;
 
-    if (type == AM275X_UAC2_DESC_DEVICE) {
+    if (type == AM275X_USB_DESC_DEVICE) {
         *data = gMscDeviceDescriptor;
         *length = (uint16_t)sizeof(gMscDeviceDescriptor);
         return AM275X_USB_MSC_OK;
     }
 
-    if (type == AM275X_UAC2_DESC_CONFIGURATION) {
+    if (type == AM275X_USB_DESC_CONFIGURATION) {
         *data = gMscConfigDescriptor;
         *length = (uint16_t)sizeof(gMscConfigDescriptor);
         return AM275X_USB_MSC_OK;
@@ -932,7 +932,7 @@ int32_t Am275xUsbMsc_getDescriptor(Am275xUac2DescriptorType type,
         return AM275X_USB_MSC_OK;
     }
 
-    if (type == AM275X_UAC2_DESC_STRING) {
+    if (type == AM275X_USB_DESC_STRING) {
         switch (index) {
             case 0:
                 *data = gStringLangId;
@@ -961,7 +961,7 @@ int32_t Am275xUsbMsc_getDescriptor(Am275xUac2DescriptorType type,
 }
 
 int32_t Am275xUsbMsc_handleClassRequest(Am275xUsbMsc *msc,
-                                        const Am275xUac2SetupPacket *setup,
+                                        const Am275xUsbSetupPacket *setup,
                                         const uint8_t **txData,
                                         uint16_t *txLength,
                                         bool *statusOnly)

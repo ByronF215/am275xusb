@@ -23,7 +23,7 @@ static uint16_t get_u16_le(const uint8_t *src)
     return (uint16_t)src[0] | ((uint16_t)src[1] << 8U);
 }
 
-static void decode_setup(const uint8_t *src, Am275xUac2SetupPacket *setup)
+static void decode_setup(const uint8_t *src, Am275xUsbSetupPacket *setup)
 {
     setup->bmRequestType = src[0];
     setup->bRequest = src[1];
@@ -100,7 +100,7 @@ static int32_t queue_data_in(Am275xUsbEp0 *ep0, const Am275xUsbEp0Response *resp
 
 static int32_t handle_setup_complete(Am275xUsbEp0 *ep0)
 {
-    Am275xUac2SetupPacket setup;
+    Am275xUsbSetupPacket setup;
     Am275xUsbEp0Response response;
     int32_t status;
 

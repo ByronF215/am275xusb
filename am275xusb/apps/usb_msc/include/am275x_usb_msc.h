@@ -6,7 +6,7 @@
 
 #include <drivers/mmcsd.h>
 
-#include "am275x_uac2.h"
+#include "am275x_usb_types.h"
 #include "am275x_usb_hw.h"
 
 #ifdef __cplusplus
@@ -71,12 +71,12 @@ int32_t Am275xUsbMsc_poll(Am275xUsbMsc *msc);
 void Am275xUsbMsc_busReset(Am275xUsbMsc *msc);
 void Am275xUsbMsc_processEvent(Am275xUsbMsc *msc, const Am275xUsbDcdEvent *event);
 
-int32_t Am275xUsbMsc_getDescriptor(Am275xUac2DescriptorType type,
+int32_t Am275xUsbMsc_getDescriptor(Am275xUsbDescriptorType type,
                                    uint8_t index,
                                    const uint8_t **data,
                                    uint16_t *length);
 int32_t Am275xUsbMsc_handleClassRequest(Am275xUsbMsc *msc,
-                                        const Am275xUac2SetupPacket *setup,
+                                        const Am275xUsbSetupPacket *setup,
                                         const uint8_t **txData,
                                         uint16_t *txLength,
                                         bool *statusOnly);
