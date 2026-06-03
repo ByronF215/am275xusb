@@ -1,0 +1,31 @@
+# CCS / TI build output
+**/Debug/
+**/Release/
+**/.launches/
+*.out
+*.o
+*.d
+*.map
+*.log
+*.xml
+*.mcelf
+*.mcelf.*
+ccsObjs.opt
+objects.mk
+sources.mk
+subdir_rules.mk
+subdir_vars.mk
+makefile
+
+# Local IDE/workspace state
+.theia/
+*.bak
+*.tmp
+
+# Captures and runtime logs
+*.pcap
+*.pcapng
+serial_logs/
+
+# Local reference documents extracted from vendor manuals
+docs/
