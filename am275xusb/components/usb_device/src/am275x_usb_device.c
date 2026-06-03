@@ -1,6 +1,8 @@
 #include "am275x_usb_device.h"
 #include "am275x_usb_hw.h"
 
+#include <stddef.h>
+
 
 static uint8_t gEp0Scratch[4];
 
@@ -51,14 +53,17 @@ static int32_t stall(Am275xUsbDevice *dev)
     return AM275X_USB_EP0_STALL;
 }
 
-int32_t Am275xUsbDevice_init(Am275xUsbDevice *dev, Am275xUsbMsc *msc)
+int32_t Am275xUsbDevice_init(Am275xUsbDevice *dev,
+                             const Am275xUsbClassDriver *classDriver,
+                             void *classContext)
 {
-    if ((dev == NULL) || (msc == NULL)) {
+    if ((dev == NULL) || (classDriver == NULL)) {
         return AM275X_USB_BAD_ARGUMENT;
     }
 
     *dev = (Am275xUsbDevice){0};
-    dev->msc = msc;
+    dev->classDriver = classDriver;
+    dev->classContext = classContext;
 
     return AM275X_USB_OK;
 }
@@ -81,7 +86,8 @@ static int32_t handle_get_descriptor(Am275xUsbDevice *dev,
     Am275xUsbDescriptorType descType = (Am275xUsbDescriptorType)((setup->wValue >> 8U) & 0xFFU);
     uint8_t descIndex = (uint8_t)(setup->wValue & 0xFFU);
 
-    if (Am275xUsbMsc_getDescriptor(descType, descIndex, &desc, &descLen) != 0) {
+    if ((dev->classDriver->getDescriptor == NULL) ||
+        (dev->classDriver->getDescriptor(dev->classContext, descType, descIndex, &desc, &descLen) != AM275X_USB_OK)) {
         return stall(dev);
     }
 
@@ -137,12 +143,21 @@ static int32_t handle_get_interface(Am275xUsbDevice *dev,
                                     Am275xUsbEp0Response *response)
 {
     uint8_t interfaceNumber = (uint8_t)(setup->wIndex & 0xFFU);
+    uint8_t alternateSetting = 0U;
 
-    if ((dev->configuration == 0U) || (interfaceNumber != 0U)) {
+    if (dev->configuration == 0U) {
         return stall(dev);
     }
 
-    gEp0Scratch[0] = 0U;
+    if (dev->classDriver->getInterface != NULL) {
+        if (dev->classDriver->getInterface(dev->classContext, interfaceNumber, &alternateSetting) != AM275X_USB_OK) {
+            return stall(dev);
+        }
+    } else if (interfaceNumber != 0U) {
+        return stall(dev);
+    }
+
+    gEp0Scratch[0] = alternateSetting;
     return ep0_tx(response, gEp0Scratch, 1U, setup->wLength);
 }
 
@@ -150,10 +165,18 @@ static int32_t handle_set_interface(Am275xUsbDevice *dev,
                                     const Am275xUsbSetupPacket *setup,
                                     Am275xUsbEp0Response *response)
 {
+    uint8_t interfaceNumber = (uint8_t)(setup->wIndex & 0xFFU);
     uint8_t alternateSetting = (uint8_t)(setup->wValue & 0xFFU);
 
-    if ((dev->configuration == 0U) || (setup->wLength != 0U) ||
-        ((setup->wIndex & 0xFFU) != 0U) || (alternateSetting != 0U)) {
+    if ((dev->configuration == 0U) || (setup->wLength != 0U)) {
+        return stall(dev);
+    }
+
+    if (dev->classDriver->setInterface != NULL) {
+        if (dev->classDriver->setInterface(dev->classContext, interfaceNumber, alternateSetting) != AM275X_USB_OK) {
+            return stall(dev);
+        }
+    } else if ((interfaceNumber != 0U) || (alternateSetting != 0U)) {
         return stall(dev);
     }
 
@@ -218,8 +241,12 @@ static int32_t handle_class_request(Am275xUsbDevice *dev,
     (void)outData;
     (void)outLength;
 
-    status = Am275xUsbMsc_handleClassRequest(dev->msc, setup, &txData, &txLength, &statusOnly);
-    if (status != AM275X_USB_MSC_OK) {
+    if (dev->classDriver->handleClassRequest == NULL) {
+        return stall(dev);
+    }
+
+    status = dev->classDriver->handleClassRequest(dev->classContext, setup, &txData, &txLength, &statusOnly);
+    if (status != AM275X_USB_OK) {
         return stall(dev);
     }
 
@@ -293,8 +320,8 @@ void Am275xUsbDevice_statusStageComplete(Am275xUsbDevice *dev)
         dev->pendingConfigurationValid = false;
         gUsbDeviceConfigurationDebug = dev->configuration;
         gUsbDeviceApplyConfigurationCount++;
-        if (dev->msc != NULL) {
-            (void)Am275xUsbMsc_setConfigured(dev->msc, (dev->configuration != 0U));
+        if (dev->classDriver->setConfigured != NULL) {
+            (void)dev->classDriver->setConfigured(dev->classContext, (dev->configuration != 0U));
         }
     }
 }
@@ -344,7 +371,7 @@ void Am275xUsbDevice_busReset(Am275xUsbDevice *dev)
     if (dev->dcd != NULL) {
         (void)Am275xUsbDcd_setAddress(dev->dcd, 0U);
     }
-    if (dev->msc != NULL) {
-        Am275xUsbMsc_busReset(dev->msc);
+    if (dev->classDriver->busReset != NULL) {
+        dev->classDriver->busReset(dev->classContext);
     }
 }

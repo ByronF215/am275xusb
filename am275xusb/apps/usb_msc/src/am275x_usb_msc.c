@@ -1011,3 +1011,82 @@ int32_t Am275xUsbMsc_handleClassRequest(Am275xUsbMsc *msc,
 
     return AM275X_USB_MSC_NOT_SUPPORTED;
 }
+
+static int32_t msc_class_get_descriptor(void *context,
+                                        Am275xUsbDescriptorType type,
+                                        uint8_t index,
+                                        const uint8_t **data,
+                                        uint16_t *length)
+{
+    (void)context;
+
+    return (Am275xUsbMsc_getDescriptor(type, index, data, length) == AM275X_USB_MSC_OK) ? 0 : -1;
+}
+
+static int32_t msc_class_handle_request(void *context,
+                                        const Am275xUsbSetupPacket *setup,
+                                        const uint8_t **txData,
+                                        uint16_t *txLength,
+                                        bool *statusOnly)
+{
+    return Am275xUsbMsc_handleClassRequest((Am275xUsbMsc *)context,
+                                           setup,
+                                           txData,
+                                           txLength,
+                                           statusOnly) == AM275X_USB_MSC_OK ? 0 : -1;
+}
+
+static int32_t msc_class_set_configured(void *context, bool configured)
+{
+    return Am275xUsbMsc_setConfigured((Am275xUsbMsc *)context, configured) == AM275X_USB_MSC_OK ? 0 : -1;
+}
+
+static int32_t msc_class_get_interface(void *context, uint8_t interfaceNumber, uint8_t *alternateSetting)
+{
+    (void)context;
+
+    if ((interfaceNumber != 0U) || (alternateSetting == NULL)) {
+        return -1;
+    }
+
+    *alternateSetting = 0U;
+    return 0;
+}
+
+static int32_t msc_class_set_interface(void *context, uint8_t interfaceNumber, uint8_t alternateSetting)
+{
+    (void)context;
+
+    return ((interfaceNumber == 0U) && (alternateSetting == 0U)) ? 0 : -1;
+}
+
+static void msc_class_bus_reset(void *context)
+{
+    Am275xUsbMsc_busReset((Am275xUsbMsc *)context);
+}
+
+static void msc_class_process_event(void *context, const Am275xUsbDcdEvent *event)
+{
+    Am275xUsbMsc_processEvent((Am275xUsbMsc *)context, event);
+}
+
+static int32_t msc_class_poll(void *context)
+{
+    return Am275xUsbMsc_poll((Am275xUsbMsc *)context);
+}
+
+const Am275xUsbClassDriver *Am275xUsbMsc_getClassDriver(void)
+{
+    static const Am275xUsbClassDriver driver = {
+        .getDescriptor = msc_class_get_descriptor,
+        .handleClassRequest = msc_class_handle_request,
+        .setConfigured = msc_class_set_configured,
+        .getInterface = msc_class_get_interface,
+        .setInterface = msc_class_set_interface,
+        .busReset = msc_class_bus_reset,
+        .processEvent = msc_class_process_event,
+        .poll = msc_class_poll,
+    };
+
+    return &driver;
+}

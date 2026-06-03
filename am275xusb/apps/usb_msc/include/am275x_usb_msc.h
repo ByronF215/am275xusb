@@ -7,6 +7,7 @@
 #include <drivers/mmcsd.h>
 
 #include "am275x_usb_types.h"
+#include "am275x_usb_class.h"
 #include "am275x_usb_hw.h"
 
 #ifdef __cplusplus
@@ -80,6 +81,7 @@ int32_t Am275xUsbMsc_handleClassRequest(Am275xUsbMsc *msc,
                                         const uint8_t **txData,
                                         uint16_t *txLength,
                                         bool *statusOnly);
+const Am275xUsbClassDriver *Am275xUsbMsc_getClassDriver(void);
 
 #ifdef __cplusplus
 }

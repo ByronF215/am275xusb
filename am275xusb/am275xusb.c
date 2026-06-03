@@ -70,6 +70,7 @@
 #define AM275X_DEV_MAIN_USB0_ISO_VD (178U)
 
 static Am275xUsbMsc gUsbMsc;
+static const Am275xUsbClassDriver *gUsbClassDriver;
 static Am275xUsbDevice gUsbDevice;
 static Am275xUsbDcd gUsbDcd;
 static Am275xUsbEp0 gUsbEp0 __attribute__((aligned(32)));
@@ -434,11 +435,15 @@ static void usb0_poll_once(void)
             Am275xUsbDcd_acknowledgeEvent(&gUsbDcd);
             Am275xUsbDevice_processDcdEvent(&gUsbDevice, &event);
             (void)Am275xUsbEp0_processEvent(&gUsbEp0, &event);
-            Am275xUsbMsc_processEvent(&gUsbMsc, &event);
+            if ((gUsbClassDriver != NULL) && (gUsbClassDriver->processEvent != NULL)) {
+                gUsbClassDriver->processEvent(&gUsbMsc, &event);
+            }
             gUsbEp0StateDebug = (uint32_t)Am275xUsbEp0_getState(&gUsbEp0);
             gUsbSetupCountDebug = gUsbDevice.setupCount;
             gUsbStallCountDebug = gUsbDevice.stallCount;
-            (void)Am275xUsbMsc_poll(&gUsbMsc);
+            if ((gUsbClassDriver != NULL) && (gUsbClassDriver->poll != NULL)) {
+                (void)gUsbClassDriver->poll(&gUsbMsc);
+            }
             if (resetEvent) {
                 status = Am275xUsbDcd_configureEp0(&gUsbDcd);
                 gUsbBringupStatus = status;
@@ -453,7 +458,9 @@ static void usb0_poll_once(void)
         }
     } while (status == AM275X_USB_HW_OK);
 
-    (void)Am275xUsbMsc_poll(&gUsbMsc);
+    if ((gUsbClassDriver != NULL) && (gUsbClassDriver->poll != NULL)) {
+        (void)gUsbClassDriver->poll(&gUsbMsc);
+    }
 }
 #endif
 
@@ -478,13 +485,15 @@ void am275xusb_main(void *args)
     status = Am275xUsbMsc_init(&gUsbMsc, gMmcsdHandle[CONFIG_MMCSD0]);
     DebugP_assert(status == AM275X_USB_MSC_OK);
 
-    status = Am275xUsbDevice_init(&gUsbDevice, &gUsbMsc);
+    gUsbClassDriver = Am275xUsbMsc_getClassDriver();
+    status = Am275xUsbDevice_init(&gUsbDevice, gUsbClassDriver, &gUsbMsc);
     DebugP_assert(status == 0);
 
-    status = Am275xUsbMsc_getDescriptor(AM275X_USB_DESC_CONFIGURATION,
-                                        0,
-                                        &cfgDesc,
-                                        &cfgDescLen);
+    status = gUsbClassDriver->getDescriptor(&gUsbMsc,
+                                            AM275X_USB_DESC_CONFIGURATION,
+                                            0,
+                                            &cfgDesc,
+                                            &cfgDescLen);
     DebugP_assert(status == 0);
     (void)cfgDesc;
 

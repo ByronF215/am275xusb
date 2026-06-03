@@ -4,9 +4,8 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "am275x_usb_types.h"
+#include "am275x_usb_class.h"
 #include "am275x_usb_hw.h"
-#include "am275x_usb_msc.h"
 
 #ifdef __cplusplus
 extern "C" {
@@ -46,7 +45,8 @@ typedef struct Am275xUsbEp0Response_s {
 } Am275xUsbEp0Response;
 
 typedef struct Am275xUsbDevice_s {
-    Am275xUsbMsc *msc;
+    const Am275xUsbClassDriver *classDriver;
+    void *classContext;
     struct Am275xUsbDcd_s *dcd;
     uint8_t address;
     uint8_t pendingAddress;
@@ -60,7 +60,9 @@ typedef struct Am275xUsbDevice_s {
     uint32_t stallCount;
 } Am275xUsbDevice;
 
-int32_t Am275xUsbDevice_init(Am275xUsbDevice *dev, Am275xUsbMsc *msc);
+int32_t Am275xUsbDevice_init(Am275xUsbDevice *dev,
+                             const Am275xUsbClassDriver *classDriver,
+                             void *classContext);
 void Am275xUsbDevice_attachDcd(Am275xUsbDevice *dev, struct Am275xUsbDcd_s *dcd);
 int32_t Am275xUsbDevice_handleSetup(Am275xUsbDevice *dev,
                                     const Am275xUsbSetupPacket *setup,
