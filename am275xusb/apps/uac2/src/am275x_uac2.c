@@ -309,3 +309,121 @@ const Am275xUac2Stats *Am275xUac2_getStats(const Am275xUac2Context *ctx)
 
     return &ctx->stats;
 }
+
+static int32_t uac2_class_get_descriptor(void *context,
+                                         Am275xUsbDescriptorType type,
+                                         uint8_t index,
+                                         const uint8_t **data,
+                                         uint16_t *length)
+{
+    return Am275xUac2_getDescriptor((Am275xUac2Context *)context,
+                                    type,
+                                    index,
+                                    data,
+                                    length) == 0 ? 0 : -1;
+}
+
+static int32_t uac2_class_handle_request(void *context,
+                                         const Am275xUsbSetupPacket *setup,
+                                         const uint8_t **txData,
+                                         uint16_t *txLength,
+                                         bool *statusOnly)
+{
+    Am275xUac2ControlTransfer transfer = {
+        .txData = NULL,
+        .txLength = (txLength != NULL) ? *txLength : 0U,
+        .rxData = NULL,
+        .rxLength = 0U,
+    };
+    int32_t status;
+
+    if ((txData == NULL) || (txLength == NULL) || (statusOnly == NULL)) {
+        return -1;
+    }
+
+    transfer.txLength = *txLength;
+    status = Am275xUac2_handleClassRequest((Am275xUac2Context *)context, setup, &transfer);
+    if (status != 0) {
+        return -1;
+    }
+
+    *txData = transfer.txData;
+    *txLength = transfer.txLength;
+    *statusOnly = (transfer.txLength == 0U);
+    return 0;
+}
+
+static int32_t uac2_class_set_configured(void *context, bool configured)
+{
+    Am275xUac2Context *ctx = (Am275xUac2Context *)context;
+
+    if (ctx == NULL) {
+        return -1;
+    }
+
+    ctx->configured = configured;
+    if (!configured) {
+        ctx->captureStreaming = false;
+    }
+
+    return 0;
+}
+
+static int32_t uac2_class_get_interface(void *context, uint8_t interfaceNumber, uint8_t *alternateSetting)
+{
+    Am275xUac2Context *ctx = (Am275xUac2Context *)context;
+
+    if ((ctx == NULL) || (alternateSetting == NULL)) {
+        return -1;
+    }
+
+    if (interfaceNumber == AM275X_UAC2_IF_AUDIO_CONTROL) {
+        *alternateSetting = 0U;
+        return 0;
+    }
+
+    if (interfaceNumber == AM275X_UAC2_IF_CAPTURE_STREAM) {
+        *alternateSetting = ctx->captureStreaming ? AM275X_UAC2_ALT_CAP_48K_S16 : AM275X_UAC2_ALT_ZERO_BW;
+        return 0;
+    }
+
+    return -1;
+}
+
+static int32_t uac2_class_set_interface(void *context, uint8_t interfaceNumber, uint8_t alternateSetting)
+{
+    return Am275xUac2_setInterface((Am275xUac2Context *)context, interfaceNumber, alternateSetting) == 0 ? 0 : -1;
+}
+
+static void uac2_class_bus_reset(void *context)
+{
+    Am275xUac2_onUsbReset((Am275xUac2Context *)context);
+}
+
+static void uac2_class_process_event(void *context, const Am275xUsbDcdEvent *event)
+{
+    (void)context;
+    (void)event;
+}
+
+static int32_t uac2_class_poll(void *context)
+{
+    Am275xUac2_periodic1ms((Am275xUac2Context *)context);
+    return 0;
+}
+
+const Am275xUsbClassDriver *Am275xUac2_getClassDriver(void)
+{
+    static const Am275xUsbClassDriver driver = {
+        .getDescriptor = uac2_class_get_descriptor,
+        .handleClassRequest = uac2_class_handle_request,
+        .setConfigured = uac2_class_set_configured,
+        .getInterface = uac2_class_get_interface,
+        .setInterface = uac2_class_set_interface,
+        .busReset = uac2_class_bus_reset,
+        .processEvent = uac2_class_process_event,
+        .poll = uac2_class_poll,
+    };
+
+    return &driver;
+}

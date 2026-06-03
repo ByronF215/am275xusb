@@ -5,6 +5,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
+#include "am275x_usb_class.h"
 #include "am275x_usb_types.h"
 
 #ifdef __cplusplus
@@ -93,6 +94,7 @@ void Am275xUac2_onResume(Am275xUac2Context *ctx);
 void Am275xUac2_periodic1ms(Am275xUac2Context *ctx);
 
 const Am275xUac2Stats *Am275xUac2_getStats(const Am275xUac2Context *ctx);
+const Am275xUsbClassDriver *Am275xUac2_getClassDriver(void);
 
 #ifdef __cplusplus
 }

@@ -40,9 +40,17 @@
 #include "ti_drivers_open_close.h"
 #include "ti_board_open_close.h"
 #include "am275x_usb_msc.h"
+#include "am275x_uac2.h"
 #include "am275x_usb_device.h"
 #include "am275x_usb_ep0.h"
 #include "am275x_usb_hw.h"
+
+#define AM275X_USB_APP_MSC   (1)
+#define AM275X_USB_APP_UAC2  (2)
+
+#ifndef AM275X_USB_ACTIVE_APP
+#define AM275X_USB_ACTIVE_APP AM275X_USB_APP_UAC2
+#endif
 
 #ifndef AM275X_USB_ENABLE_USB0_HW_INIT
 #define AM275X_USB_ENABLE_USB0_HW_INIT (1)
@@ -69,8 +77,15 @@
 #define AM275X_DEV_USB0 (161U)
 #define AM275X_DEV_MAIN_USB0_ISO_VD (178U)
 
+#if AM275X_USB_ACTIVE_APP == AM275X_USB_APP_MSC
 static Am275xUsbMsc gUsbMsc;
+#elif AM275X_USB_ACTIVE_APP == AM275X_USB_APP_UAC2
+static Am275xUac2Context gUac2;
+#else
+#error Unsupported AM275X_USB_ACTIVE_APP
+#endif
 static const Am275xUsbClassDriver *gUsbClassDriver;
+static void *gUsbClassContext;
 static Am275xUsbDevice gUsbDevice;
 static Am275xUsbDcd gUsbDcd;
 static Am275xUsbEp0 gUsbEp0 __attribute__((aligned(32)));
@@ -436,13 +451,13 @@ static void usb0_poll_once(void)
             Am275xUsbDevice_processDcdEvent(&gUsbDevice, &event);
             (void)Am275xUsbEp0_processEvent(&gUsbEp0, &event);
             if ((gUsbClassDriver != NULL) && (gUsbClassDriver->processEvent != NULL)) {
-                gUsbClassDriver->processEvent(&gUsbMsc, &event);
+                gUsbClassDriver->processEvent(gUsbClassContext, &event);
             }
             gUsbEp0StateDebug = (uint32_t)Am275xUsbEp0_getState(&gUsbEp0);
             gUsbSetupCountDebug = gUsbDevice.setupCount;
             gUsbStallCountDebug = gUsbDevice.stallCount;
             if ((gUsbClassDriver != NULL) && (gUsbClassDriver->poll != NULL)) {
-                (void)gUsbClassDriver->poll(&gUsbMsc);
+                (void)gUsbClassDriver->poll(gUsbClassContext);
             }
             if (resetEvent) {
                 status = Am275xUsbDcd_configureEp0(&gUsbDcd);
@@ -459,7 +474,7 @@ static void usb0_poll_once(void)
     } while (status == AM275X_USB_HW_OK);
 
     if ((gUsbClassDriver != NULL) && (gUsbClassDriver->poll != NULL)) {
-        (void)gUsbClassDriver->poll(&gUsbMsc);
+        (void)gUsbClassDriver->poll(gUsbClassContext);
     }
 }
 #endif
@@ -479,6 +494,7 @@ void am275xusb_main(void *args)
     DebugP_log("AM275x USB device\r\n");
 #endif
 
+#if AM275X_USB_ACTIVE_APP == AM275X_USB_APP_MSC
     status = emmc_ensure_full_disk_fat();
     DebugP_assert(status == SystemP_SUCCESS);
 
@@ -486,10 +502,19 @@ void am275xusb_main(void *args)
     DebugP_assert(status == AM275X_USB_MSC_OK);
 
     gUsbClassDriver = Am275xUsbMsc_getClassDriver();
-    status = Am275xUsbDevice_init(&gUsbDevice, gUsbClassDriver, &gUsbMsc);
+    gUsbClassContext = &gUsbMsc;
+#elif AM275X_USB_ACTIVE_APP == AM275X_USB_APP_UAC2
+    status = Am275xUac2_init(&gUac2, NULL);
     DebugP_assert(status == 0);
 
-    status = gUsbClassDriver->getDescriptor(&gUsbMsc,
+    gUsbClassDriver = Am275xUac2_getClassDriver();
+    gUsbClassContext = &gUac2;
+#endif
+
+    status = Am275xUsbDevice_init(&gUsbDevice, gUsbClassDriver, gUsbClassContext);
+    DebugP_assert(status == 0);
+
+    status = gUsbClassDriver->getDescriptor(gUsbClassContext,
                                             AM275X_USB_DESC_CONFIGURATION,
                                             0,
                                             &cfgDesc,
@@ -539,7 +564,9 @@ void am275xusb_main(void *args)
             return;
         }
         Am275xUsbDevice_attachDcd(&gUsbDevice, &gUsbDcd);
+#if AM275X_USB_ACTIVE_APP == AM275X_USB_APP_MSC
         Am275xUsbMsc_attachDcd(&gUsbMsc, &gUsbDcd);
+#endif
         gUsbBringupStep = 12U;
         status = Am275xUsbDcd_configureEp0(&gUsbDcd);
         gUsbBringupStatus = status;
@@ -582,9 +609,13 @@ void am275xusb_main(void *args)
     (void)gUsbEp0;
     (void)gUsb0EventBuffer;
 #endif
+#if AM275X_USB_ACTIVE_APP == AM275X_USB_APP_MSC
     DebugP_log("USB MSC eMMC descriptor ready, config length %u bytes, blocks %u\r\n",
                cfgDescLen,
                (uint32_t)MMCSD_getBlockCount(gMmcsdHandle[CONFIG_MMCSD0]));
+#elif AM275X_USB_ACTIVE_APP == AM275X_USB_APP_UAC2
+    DebugP_log("USB UAC2 descriptor ready, config length %u bytes\r\n", cfgDescLen);
+#endif
     DebugP_log("USB0 core cap base 0x%08x, device base 0x%08x\r\n",
                (uint32_t)usbHwInfo.coreCapBase,
                (uint32_t)usbHwInfo.coreDeviceBase);
